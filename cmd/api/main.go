@@ -27,6 +27,7 @@ type Contract struct {
 
 func main() {
 	db.InitDB()
+	db.RemoveExpiredContracts()
 	cronjob.StartScheduler()
 	openai.Init()
 
