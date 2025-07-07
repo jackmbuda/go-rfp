@@ -57,7 +57,12 @@ func main() {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(contracts)
+		output, err := json.MarshalIndent(contracts, "", "  ")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Write(output)
 	})
 
 	// GET /contracts/naics/{code}
@@ -93,7 +98,12 @@ func main() {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(contracts)
+		output, err := json.MarshalIndent(contracts, "", "  ")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Write(output)
 	})
 
 	// GET /contracts/search?query=...
@@ -151,7 +161,12 @@ func main() {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(result)
+		output, err := json.MarshalIndent(contracts, "", "  ")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Write(output)
 	})
 
 	log.Println("🚀 Server running at http://localhost:8080")
