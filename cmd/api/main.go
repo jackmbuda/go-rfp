@@ -161,7 +161,7 @@ func main() {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		output, err := json.MarshalIndent(contracts, "", "  ")
+		output, err := json.MarshalIndent(result, "", "  ")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
