@@ -3,6 +3,7 @@ package openai
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -16,35 +17,54 @@ func Init() {
 	client = openai.NewClient(apiKey)
 }
 
-// scoreContracts sends the query and returns the top 5 contract IDs
+// ScoreContracts sends the query and contract summaries to OpenAI,
+// and expects a comma-separated list of ranked contract IDs.
 func ScoreContracts(query string, contracts []string) ([]string, error) {
-	prompt := fmt.Sprintf(`Given this search query: %q
-Rank these contract IDs in order of relevance from most to least:
-%s`, query, "```\n"+strings.Join(contracts, "\n")+"```")
+	// Build a clearer prompt
+	prompt := fmt.Sprintf(`
+The search term is: "%s".
 
+Below is a list of contract summaries. Each summary is formatted as "ID: title — description":
+
+%s
+
+Rank the contracts by how relevant they are to the search term. 
+ONLY return a comma-separated list of the contract IDs in order of relevance. 
+Do not include any additional explanation, formatting, or text.
+`, query, strings.Join(contracts, "\n"))
+
+	log.Printf("📤 OpenAI request prompt:\n%s", prompt)
+
+	// Send to OpenAI
 	resp, err := client.CreateChatCompletion(
 		context.Background(),
 		openai.ChatCompletionRequest{
 			Model: openai.GPT3Dot5Turbo,
 			Messages: []openai.ChatCompletionMessage{
-				{Role: openai.ChatMessageRoleSystem, Content: "You are a contract finder."},
+				{Role: openai.ChatMessageRoleSystem, Content: "You are a helpful assistant that ranks government contract opportunities based on relevance to a given search term."},
 				{Role: openai.ChatMessageRoleUser, Content: prompt},
 			},
-			MaxTokens: 150,
+			MaxTokens: 100,
 		},
 	)
+	log.Printf("*** OpenAI raw response: %+v", resp)
 	if err != nil {
 		return nil, err
 	}
 
+	// Extract and log response
 	content := resp.Choices[0].Message.Content
-	lines := strings.Split(content, "\n")
+	log.Printf("✅ OpenAI message content: %s", content)
+
+	// Parse comma-separated contract IDs
+	rawIDs := strings.Split(content, ",")
 	var results []string
-	for _, line := range lines {
-		id := strings.TrimSpace(line)
-		if id != "" {
-			results = append(results, id)
+	for _, id := range rawIDs {
+		trimmed := strings.TrimSpace(id)
+		if trimmed != "" {
+			results = append(results, trimmed)
 		}
 	}
+
 	return results, nil
 }

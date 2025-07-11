@@ -36,3 +36,13 @@ func InitDB() {
 		log.Fatalf("Failed to create schema: %v", err)
 	}
 }
+
+func CountContracts() {
+	row := DB.QueryRow("SELECT COUNT(*) FROM contracts")
+	var count int
+	if err := row.Scan(&count); err != nil {
+		log.Printf("❌ Failed to count contracts: %v", err)
+		return
+	}
+	log.Printf("📊 Total contracts in database: %d", count)
+}

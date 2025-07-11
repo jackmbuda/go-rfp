@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -60,6 +61,7 @@ func DownloadAndSync() error {
 	if err != nil {
 		return fmt.Errorf("failed to read header row: %v", err)
 	}
+	log.Printf("Successfully read header row")
 
 	idx := map[string]int{}
 	for i, h := range headers {

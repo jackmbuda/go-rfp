@@ -30,6 +30,7 @@ func main() {
 	db.RemoveExpiredContracts()
 	cronjob.StartScheduler()
 	openai.Init()
+	db.CountContracts()
 
 	// GET /contracts — list all active contracts
 	http.HandleFunc("/contracts", func(w http.ResponseWriter, r *http.Request) {
@@ -155,10 +156,23 @@ func main() {
 		}
 
 		var result []Contract
+		seen := make(map[string]bool)
 		for _, id := range topIDs {
+			if seen[id] {
+				continue
+			}
+			seen[id] = true
+
 			if c, ok := idToFull[id]; ok {
 				result = append(result, c)
 			}
+		}
+
+		// 🔍 Log the contracts that OpenAI ranked
+		log.Printf("✅ Ranked contracts from OpenAI:")
+		log.Println(len(result))
+		for _, c := range result {
+			log.Printf("📝 ID: %s, Title: %s, Description: %.100s...", c.ID, c.Title, c.Description)
 		}
 
 		w.Header().Set("Content-Type", "application/json")
